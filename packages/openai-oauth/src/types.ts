@@ -127,6 +127,7 @@ export type OpenAIOAuthServerOptions = Omit<
 	host?: string
 	port?: number
 	models?: string[]
+	codexVersion?: string
 	requestLogger?: (event: OpenAIOAuthServerLogEvent) => void
 }
 

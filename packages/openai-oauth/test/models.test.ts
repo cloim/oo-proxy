@@ -46,8 +46,25 @@ describe("model discovery", () => {
 		expect(version).toBe("0.114.0")
 	})
 
+	test("uses an explicit codex version override when provided", async () => {
+		resetCodexClientVersionCache()
+
+		const version = await resolveCodexClientVersion({
+			codexVersion: "0.200.0",
+			runCommand: async () => {
+				throw new Error("local lookup should not run")
+			},
+			fetchImpl: async () => {
+				throw new Error("remote lookup should not run")
+			},
+		})
+
+		expect(version).toBe("0.200.0")
+	})
+
 	test("uses a pinned fallback when local and remote version discovery fail", async () => {
 		resetCodexClientVersionCache()
+		const warnings: string[] = []
 
 		const version = await resolveCodexClientVersion({
 			runCommand: async () => {
@@ -56,9 +73,15 @@ describe("model discovery", () => {
 			fetchImpl: async () => {
 				throw new Error("network unavailable")
 			},
+			onWarning: (message) => {
+				warnings.push(message)
+			},
 		})
 
 		expect(version).toBe("0.111.0")
+		expect(warnings).toEqual([
+			"Could not determine the Codex API version automatically. Falling back to 0.111.0. Pass a version explicitly with --codex-version if you need to override it.",
+		])
 	})
 
 	test("returns configured models without upstream discovery", async () => {

@@ -15,6 +15,8 @@ describe("openai oauth cli", () => {
 			"9999",
 			"--models",
 			"gpt-5.4,gpt-5.3-codex",
+			"--codex-version",
+			"0.114.0",
 			"--base-url",
 			"https://example.com/codex",
 			"--oauth-client-id",
@@ -29,6 +31,7 @@ describe("openai oauth cli", () => {
 			host: "0.0.0.0",
 			port: 9999,
 			models: ["gpt-5.4", "gpt-5.3-codex"],
+			codexVersion: "0.114.0",
 			baseURL: "https://example.com/codex",
 			clientId: "client-123",
 			tokenUrl: "https://auth.example.com/oauth/token",
@@ -48,6 +51,7 @@ describe("openai oauth cli", () => {
 					host: "127.0.0.1",
 					port: 10531,
 					models: undefined,
+					codexVersion: undefined,
 					baseURL: undefined,
 					clientId: undefined,
 					tokenUrl: undefined,
@@ -80,6 +84,7 @@ describe("openai oauth cli", () => {
 		expect(toServerOptions({})).toMatchObject({
 			host: undefined,
 			port: 10531,
+			codexVersion: undefined,
 		})
 
 		vi.unstubAllEnvs()

@@ -29,6 +29,7 @@ console.log(result.text)
 | Config | Provider | Default | Description |
 | --- | --- | --- | --- |
 | Upstream base URL | `baseURL` | `https://chatgpt.com/backend-api/codex` | Override the upstream Codex base URL. |
+| Codex API version | `codexVersion` | Local `codex --version`, then `@openai/codex` latest from npm, then `0.111.0` | Override the Codex API client version used for model discovery. This mainly matters for CLI-style model catalog lookups, but the provider accepts it for config parity. |
 | OAuth client id | `clientId` | `app_EMoamEEZ73f0CkXaXp7hrann` | Override the OAuth client id used for refresh. |
 | OAuth token URL | `tokenUrl` | `https://auth.openai.com/oauth/token` | Override the OAuth token URL used for refresh. |
 | Auth file path | `authFilePath` | `authFilePath` if provided, otherwise `$CHATGPT_LOCAL_HOME/auth.json`, `$CODEX_HOME/auth.json`, `~/.chatgpt-local/auth.json`, `~/.codex/auth.json` | Override where the local OAuth auth file is discovered. |

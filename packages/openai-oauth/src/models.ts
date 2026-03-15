@@ -33,7 +33,9 @@ type RunCommand = (
 type FetchLike = typeof fetch
 
 type ModelResolverDependencies = {
+	codexVersion?: string
 	fetchImpl?: FetchLike
+	onWarning?: (message: string) => void
 	runCommand?: RunCommand
 }
 
@@ -106,6 +108,13 @@ const resolveRemoteCodexClientVersion = async (
 export const resolveCodexClientVersion = async (
 	dependencies: ModelResolverDependencies = {},
 ): Promise<string> => {
+	if (
+		typeof dependencies.codexVersion === "string" &&
+		dependencies.codexVersion.trim().length > 0
+	) {
+		return dependencies.codexVersion.trim()
+	}
+
 	const now = Date.now()
 	if (cachedCodexClientVersion && now < codexClientVersionCacheExpiresAt) {
 		return cachedCodexClientVersion
@@ -137,6 +146,9 @@ export const resolveCodexClientVersion = async (
 
 		cachedCodexClientVersion = FALLBACK_CODEX_CLIENT_VERSION
 		codexClientVersionCacheExpiresAt = Date.now() + CODEX_VERSION_CACHE_TTL_MS
+		dependencies.onWarning?.(
+			`Could not determine the Codex API version automatically. Falling back to ${FALLBACK_CODEX_CLIENT_VERSION}. Pass a version explicitly with --codex-version if you need to override it.`,
+		)
 		inflightCodexClientVersion = undefined
 		return FALLBACK_CODEX_CLIENT_VERSION
 	})().catch((error) => {

@@ -15,6 +15,7 @@ const DEFAULT_CODEX_INSTRUCTIONS = ""
 
 export type CodexOAuthSettings = Omit<AuthLoaderOptions, "fetch"> & {
 	baseURL?: string
+	codexVersion?: string
 	fetch?: FetchFunction
 	headers?: Record<string, string>
 	instructions?: string

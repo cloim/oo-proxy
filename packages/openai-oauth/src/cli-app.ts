@@ -13,6 +13,7 @@ export type CliArgs = {
 	host?: string
 	port?: number
 	models?: string[]
+	codexVersion?: string
 	baseURL?: string
 	clientId?: string
 	tokenUrl?: string
@@ -50,6 +51,11 @@ export const parseCliArgs = (argv: string[]): CliArgs => {
 			describe: "Comma-separated list of models exposed by /v1/models.",
 			coerce: parseModels,
 		})
+		.option("codex-version", {
+			type: "string",
+			describe:
+				"Override the Codex API client version used for model discovery.",
+		})
 		.option("base-url", {
 			type: "string",
 			describe: "Override the upstream Codex responses base URL.",
@@ -72,6 +78,7 @@ export const parseCliArgs = (argv: string[]): CliArgs => {
 		host: parsed.host,
 		port: parsed.port,
 		models: parsed.models,
+		codexVersion: parsed.codexVersion,
 		baseURL: parsed.baseUrl,
 		clientId: parsed.oauthClientId,
 		tokenUrl: parsed.oauthTokenUrl,
@@ -83,6 +90,7 @@ export const toServerOptions = (args: CliArgs) => ({
 	host: args.host,
 	port: args.port ?? DEFAULT_PORT,
 	models: args.models,
+	codexVersion: args.codexVersion,
 	baseURL: args.baseURL,
 	clientId: args.clientId,
 	tokenUrl: args.tokenUrl,
@@ -142,7 +150,16 @@ export const runCli = async (argv: string[] = hideBin(process.argv)) => {
 		...options,
 		responsesState: false,
 	})
-	const availableModels = await resolveOpenAIOAuthModels(client, options.models)
+	const availableModels = await resolveOpenAIOAuthModels(
+		client,
+		options.models,
+		{
+			codexVersion: options.codexVersion,
+			onWarning: (message) => {
+				console.error(message)
+			},
+		},
+	)
 	const server = await startOpenAIOAuthServer(options)
 
 	console.log(
