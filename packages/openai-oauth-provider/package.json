@@ -1,6 +1,7 @@
 {
 	"name": "openai-oauth-provider",
-	"version": "0.0.0",
+	"version": "0.0.1",
+	"description": "Vercel AI SDK Provider for Free OpenAI API access with your ChatGPT account.",
 	"type": "module",
 	"exports": {
 		".": {
@@ -29,5 +30,11 @@
 		"typescript": "latest",
 		"vitest": "latest",
 		"zod": "^3.25.76"
-	}
+	},
+	"author": "EvanZhouDev",
+	"license": "AGPL-3.0-only",
+	"bugs": {
+		"url": "https://github.com/EvanZhouDev/openai-oauth/issues"
+	},
+	"homepage": "https://github.com/EvanZhouDev/openai-oauth#readme"
 }
