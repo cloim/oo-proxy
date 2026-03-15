@@ -36,6 +36,8 @@ export type EffectiveAuth = {
 export type AuthLoaderOptions = {
 	clientId?: string
 	issuer?: string
+	tokenUrl?: string
+	authorizationUrl?: string
 	authFilePath?: string
 	fetch: FetchFunction
 	ensureFresh?: boolean
@@ -153,7 +155,11 @@ const uniquePaths = (paths: string[]): string[] => {
 	return result
 }
 
-const resolveReadCandidates = (authFilePath?: string): string[] => {
+export const resolveAuthFileCandidates = (authFilePath?: string): string[] => {
+	if (typeof authFilePath === "string" && authFilePath.length > 0) {
+		return [authFilePath]
+	}
+
 	const envHome = process.env.CHATGPT_LOCAL_HOME
 	const codexHome = process.env.CODEX_HOME
 
@@ -252,10 +258,12 @@ const refreshChatGptTokens = async (
 	refreshToken: string,
 	clientId: string,
 	issuer: string,
+	tokenUrl: string | undefined,
 	fetchFn: FetchFunction,
 ): Promise<RefreshOutcome | undefined> => {
-	const tokenUrl = `${issuer.replace(/\/$/, "")}/oauth/token`
-	const response = await fetchFn(tokenUrl, {
+	const resolvedTokenUrl =
+		tokenUrl ?? `${issuer.replace(/\/$/, "")}/oauth/token`
+	const response = await fetchFn(resolvedTokenUrl, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -316,6 +324,7 @@ export const loadAuthTokens = async (
 	const {
 		clientId = DEFAULT_CLIENT_ID,
 		issuer = DEFAULT_ISSUER,
+		tokenUrl,
 		authFilePath,
 		fetch,
 		ensureFresh = true,
@@ -328,7 +337,7 @@ export const loadAuthTokens = async (
 		)
 	}
 
-	const readResult = await readAuthFile(resolveReadCandidates(authFilePath))
+	const readResult = await readAuthFile(resolveAuthFileCandidates(authFilePath))
 	const authData = readResult.data ?? {}
 	const tokens = normalizeTokens(authData.tokens)
 
@@ -348,6 +357,7 @@ export const loadAuthTokens = async (
 			refreshToken,
 			clientId,
 			issuer,
+			tokenUrl,
 			fetch,
 		)
 

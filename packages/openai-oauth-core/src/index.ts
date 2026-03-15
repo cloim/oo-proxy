@@ -1,5 +1,10 @@
 export type { AuthLoaderOptions, EffectiveAuth } from "./auth.js"
-export { deriveAccountId, loadAuthTokens, parseJwtClaims } from "./auth.js"
+export {
+	deriveAccountId,
+	loadAuthTokens,
+	parseJwtClaims,
+	resolveAuthFileCandidates,
+} from "./auth.js"
 export {
 	collectCompletedResponseFromSse,
 	iterateServerSentEvents,

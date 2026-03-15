@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 import { deriveAccountId, loadAuthTokens, parseJwtClaims } from "../src/auth.js"
 
 const encodeBase64Url = (value: Record<string, unknown>): string =>
@@ -148,6 +148,54 @@ describe("loadAuthTokens", () => {
 			const updated = JSON.parse(await fs.readFile(authPath, "utf-8"))
 			expect(updated.last_refresh).toBe(now.toISOString())
 			expect(updated.tokens.access_token).toBe("new-access")
+		} finally {
+			await fs.rm(root, { recursive: true, force: true })
+		}
+	})
+
+	test("uses an explicit token url override when refreshing", async () => {
+		const root = await fs.mkdtemp(path.join(os.tmpdir(), "auth-token-url-"))
+		const authPath = path.join(root, "auth.json")
+		const now = new Date("2025-01-01T00:00:00Z")
+		const expiredToken = createJwt({
+			exp: Math.floor(now.getTime() / 1000) - 10,
+		})
+		const fetch = vi.fn(async () => {
+			return new Response(
+				JSON.stringify({
+					access_token: "new-access",
+					refresh_token: "new-refresh",
+				}),
+				{
+					status: 200,
+					headers: { "Content-Type": "application/json" },
+				},
+			)
+		})
+
+		try {
+			await writeAuthFile(authPath, {
+				tokens: {
+					access_token: expiredToken,
+					refresh_token: "refresh",
+					account_id: "acct-1",
+				},
+				last_refresh: "2020-01-01T00:00:00Z",
+			})
+
+			await loadAuthTokens({
+				authFilePath: authPath,
+				fetch,
+				now: () => now,
+				tokenUrl: "https://auth.example.com/custom/token",
+			})
+
+			expect(fetch).toHaveBeenCalledWith(
+				"https://auth.example.com/custom/token",
+				expect.objectContaining({
+					method: "POST",
+				}),
+			)
 		} finally {
 			await fs.rm(root, { recursive: true, force: true })
 		}

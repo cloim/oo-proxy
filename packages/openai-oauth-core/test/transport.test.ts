@@ -250,6 +250,89 @@ describe("createCodexOAuthFetch", () => {
 			force: true,
 		})
 	})
+
+	test("passes token url overrides through auth refresh", async () => {
+		const root = await fs.mkdtemp(
+			path.join(os.tmpdir(), "codex-oauth-refresh-"),
+		)
+		const authFilePath = path.join(root, "auth.json")
+		const now = new Date("2025-01-01T00:00:00Z")
+		const expiredToken = [
+			Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString(
+				"base64url",
+			),
+			Buffer.from(
+				JSON.stringify({
+					exp: Math.floor(now.getTime() / 1000) - 10,
+				}),
+			).toString("base64url"),
+			"signature",
+		].join(".")
+		const fetch = vi.fn(async (input: RequestInfo | URL) => {
+			if (String(input) === "https://auth.example.com/custom/token") {
+				return new Response(
+					JSON.stringify({
+						access_token: "new-access",
+						refresh_token: "new-refresh",
+					}),
+					{
+						status: 200,
+						headers: { "Content-Type": "application/json" },
+					},
+				)
+			}
+
+			return new Response(null, { status: 200 })
+		})
+
+		try {
+			await fs.writeFile(
+				authFilePath,
+				JSON.stringify(
+					{
+						tokens: {
+							access_token: expiredToken,
+							refresh_token: "refresh",
+							account_id: "acct-1",
+						},
+						last_refresh: "2020-01-01T00:00:00Z",
+					},
+					null,
+					2,
+				),
+				"utf-8",
+			)
+
+			const oauthFetch = createCodexOAuthFetch({
+				authFilePath,
+				fetch,
+				now: () => now,
+				tokenUrl: "https://auth.example.com/custom/token",
+			})
+
+			await oauthFetch("responses", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					model: "gpt-5.2",
+				}),
+			})
+
+			expect(fetch).toHaveBeenCalledWith(
+				"https://auth.example.com/custom/token",
+				expect.objectContaining({
+					method: "POST",
+				}),
+			)
+		} finally {
+			await fs.rm(root, {
+				recursive: true,
+				force: true,
+			})
+		}
+	})
 })
 
 describe("collectCompletedResponseFromSse", () => {
