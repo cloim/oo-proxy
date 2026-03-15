@@ -73,8 +73,7 @@ What is intentionally not there yet:
 
 - Only LLMs supported by Codex are available. This lists updates over time and is dependent on your Codex plan.
 - Login flow is intentionally not bundled. Simply run `npx @openai/codex login` to create the auth file.
-- Stateful replay support on the CLI `/v1/responses` endpoint
-  The proxy is stateless and expects callers to send the full conversation history.
+- There is no stateful replay support on the CLI `/v1/responses` endpoint. The proxy is stateless and expects callers to send the full conversation history.
 
 ## How it Works
 
