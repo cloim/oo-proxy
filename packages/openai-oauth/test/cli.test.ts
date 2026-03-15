@@ -1,0 +1,71 @@
+import { describe, expect, test } from "vitest"
+import {
+	parseCliArgs,
+	toMissingAuthFileMessage,
+	toServerOptions,
+	toStartupMessage,
+} from "../src/cli-app.js"
+
+describe("openai oauth cli", () => {
+	test("parses kebab-case flags into server options", () => {
+		const parsed = parseCliArgs([
+			"--host",
+			"0.0.0.0",
+			"--port",
+			"9999",
+			"--models",
+			"gpt-5.4,gpt-5.3-codex",
+			"--base-url",
+			"https://example.com/codex",
+			"--oauth-client-id",
+			"client-123",
+			"--oauth-token-url",
+			"https://auth.example.com/oauth/token",
+			"--oauth-file",
+			"/tmp/auth.json",
+		])
+
+		expect(toServerOptions(parsed)).toMatchObject({
+			host: "0.0.0.0",
+			port: 9999,
+			models: ["gpt-5.4", "gpt-5.3-codex"],
+			baseURL: "https://example.com/codex",
+			clientId: "client-123",
+			tokenUrl: "https://auth.example.com/oauth/token",
+			authFilePath: "/tmp/auth.json",
+		})
+	})
+
+	test("drops empty model entries", () => {
+		const parsed = parseCliArgs(["--models", "gpt-5.4, ,gpt-5.2,,"])
+		expect(parsed.models).toEqual(["gpt-5.4", "gpt-5.2"])
+	})
+
+	test("formats the default startup message for local usage", () => {
+		expect(
+			toStartupMessage({
+				host: "127.0.0.1",
+				port: 10531,
+				models: undefined,
+				baseURL: undefined,
+				clientId: undefined,
+				tokenUrl: undefined,
+				authFilePath: undefined,
+			}),
+		).toBe(
+			[
+				"OpenAI-compatible endpoint ready at http://127.0.0.1:10531/v1",
+				"Use this as your OpenAI base URL. No API key is required.",
+			].join("\n"),
+		)
+	})
+
+	test("formats a missing explicit auth file message", () => {
+		expect(toMissingAuthFileMessage("/tmp/missing-auth.json")).toContain(
+			"Run `npx @openai/codex login` and try again.",
+		)
+		expect(toMissingAuthFileMessage("/tmp/missing-auth.json")).toContain(
+			"/tmp/missing-auth.json",
+		)
+	})
+})
