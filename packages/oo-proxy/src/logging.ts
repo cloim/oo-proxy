@@ -23,8 +23,8 @@ const formatVerboseEvent = (event: OoProxyServerLogEvent): string => {
 	if (event.type === "chat_response") {
 		const header = `[${ts}][A][${event.model ?? "?"}]`
 		return event.responseText
-			? `${header}\n${event.responseText}`
-			: header
+			? `${header}\n${event.responseText}\n`
+			: `${header}\n`
 	}
 	if (event.type === "chat_error") {
 		return `[${ts}][E] ${event.message}`
