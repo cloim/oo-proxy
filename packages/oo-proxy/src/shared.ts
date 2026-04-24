@@ -123,15 +123,19 @@ const extractMessageText = (content: unknown): string | undefined => {
 	return undefined
 }
 
-const extractLastUserPrompt = (
+const extractPrompt = (
 	messages: Array<{ role?: string; content?: unknown }> | undefined,
 ): string | undefined => {
-	if (!Array.isArray(messages)) return undefined
-	for (let i = messages.length - 1; i >= 0; i--) {
-		const msg = messages[i]
-		if (msg?.role === "user") return extractMessageText(msg.content)
-	}
-	return undefined
+	if (!Array.isArray(messages) || messages.length === 0) return undefined
+	return messages
+		.map((msg) => {
+			const text = extractMessageText(msg.content)
+			if (!text) return null
+			const role = msg.role ?? "unknown"
+			return `[${role}] ${text}`
+		})
+		.filter((line): line is string => line !== null)
+		.join("\n")
 }
 
 export const summarizeChatRequest = (request: {
@@ -147,7 +151,7 @@ export const summarizeChatRequest = (request: {
 		.map((message) => message.role)
 		.filter((role): role is string => typeof role === "string"),
 	model: request.model,
-	prompt: extractLastUserPrompt(request.messages),
+	prompt: extractPrompt(request.messages),
 	reasoningEffort: request.reasoning_effort,
 	stream: request.stream === true,
 	toolCount: request.tools?.length ?? 0,

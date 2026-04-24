@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest"
 import { createRequestLogger, emitRequestLog } from "../src/logging.js"
+import { summarizeChatRequest } from "../src/shared.js"
 import type { OoProxyServerLogEvent } from "../src/types.js"
 
 const TS_PATTERN = /^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/
@@ -72,22 +73,23 @@ describe("verbose output format", () => {
 		expect(out).toContain("[gpt-5.2]")
 	})
 
-	test("formats chat_request with prompt text", () => {
+	test("formats chat_request with prompt text including role prefix", () => {
 		const out = getLogOutput({
 			type: "chat_request",
 			requestId: "req-2",
 			path: "/v1/chat/completions",
 			model: "gpt-5.2",
-			messageCount: 1,
-			messageRoles: ["user"],
+			messageCount: 2,
+			messageRoles: ["system", "user"],
 			bodyKeys: ["model", "messages"],
 			stream: false,
 			toolCount: 0,
-			prompt: "안녕하세요",
+			prompt: "[system] 당신은 도우미입니다.\n[user] 안녕하세요",
 		})
 
 		expect(out).toContain("[R]")
-		expect(out).toContain("안녕하세요")
+		expect(out).toContain("[system] 당신은 도우미입니다.")
+		expect(out).toContain("[user] 안녕하세요")
 	})
 
 	test("shows full prompt without truncation", () => {
@@ -247,5 +249,64 @@ describe("emitRequestLog", () => {
 				message: "err",
 			}),
 		).not.toThrow()
+	})
+})
+
+describe("summarizeChatRequest prompt extraction", () => {
+	test("includes system and user messages with role prefix", () => {
+		const { prompt } = summarizeChatRequest({
+			model: "gpt-5.2",
+			messages: [
+				{ role: "system", content: "당신은 도우미입니다." },
+				{ role: "user", content: "안녕하세요" },
+			],
+		})
+		expect(prompt).toBe("[system] 당신은 도우미입니다.\n[user] 안녕하세요")
+	})
+
+	test("includes all messages including assistant turns", () => {
+		const { prompt } = summarizeChatRequest({
+			model: "gpt-5.2",
+			messages: [
+				{ role: "system", content: "You are helpful." },
+				{ role: "user", content: "Hello" },
+				{ role: "assistant", content: "Hi there!" },
+				{ role: "user", content: "How are you?" },
+			],
+		})
+		expect(prompt).toContain("[system] You are helpful.")
+		expect(prompt).toContain("[user] Hello")
+		expect(prompt).toContain("[assistant] Hi there!")
+		expect(prompt).toContain("[user] How are you?")
+	})
+
+	test("extracts text from array content parts", () => {
+		const { prompt } = summarizeChatRequest({
+			model: "gpt-5.2",
+			messages: [
+				{
+					role: "user",
+					content: [
+						{ type: "text", text: "이미지 설명해 줘" },
+						{ type: "image_url", url: "http://example.com/img.png" },
+					],
+				},
+			],
+		})
+		expect(prompt).toBe("[user] 이미지 설명해 줘")
+	})
+
+	test("returns undefined for empty messages", () => {
+		expect(summarizeChatRequest({ messages: [] }).prompt).toBeUndefined()
+	})
+
+	test("skips messages with no extractable text", () => {
+		const { prompt } = summarizeChatRequest({
+			messages: [
+				{ role: "user", content: "Hello" },
+				{ role: "assistant", content: undefined },
+			],
+		})
+		expect(prompt).toBe("[user] Hello")
 	})
 })

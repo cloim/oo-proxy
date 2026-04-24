@@ -15,10 +15,16 @@ const formatTimestamp = (): string => {
 const formatVerboseEvent = (event: OoProxyServerLogEvent): string => {
 	const ts = formatTimestamp()
 	if (event.type === "chat_request") {
-		return `[${ts}][R][${event.model ?? "?"}] ${event.prompt ?? ""}`
+		const header = `[${ts}][R][${event.model ?? "?"}]`
+		return event.prompt
+			? `${header}\n${event.prompt}`
+			: header
 	}
 	if (event.type === "chat_response") {
-		return `[${ts}][A][${event.model ?? "?"}] ${event.responseText ?? ""}`
+		const header = `[${ts}][A][${event.model ?? "?"}]`
+		return event.responseText
+			? `${header}\n${event.responseText}`
+			: header
 	}
 	if (event.type === "chat_error") {
 		return `[${ts}][E] ${event.message}`
