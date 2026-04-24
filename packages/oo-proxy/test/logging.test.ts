@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest"
 import { createRequestLogger, emitRequestLog } from "../src/logging.js"
 import type { OoProxyServerLogEvent } from "../src/types.js"
 
-const TS_PATTERN = /^\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/
+const TS_PATTERN = /^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]/
 
 describe("createRequestLogger", () => {
 	afterEach(() => {

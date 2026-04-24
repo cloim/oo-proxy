@@ -3,8 +3,17 @@ import type {
 	OoProxyServerOptions,
 } from "./types.js"
 
+const formatTimestamp = (): string => {
+	const now = new Date()
+	const pad = (n: number) => String(n).padStart(2, "0")
+	return (
+		`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}` +
+		` ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+	)
+}
+
 const formatVerboseEvent = (event: OoProxyServerLogEvent): string => {
-	const ts = new Date().toISOString()
+	const ts = formatTimestamp()
 	if (event.type === "chat_request") {
 		return `[${ts}][R][${event.model ?? "?"}] ${event.prompt ?? ""}`
 	}
