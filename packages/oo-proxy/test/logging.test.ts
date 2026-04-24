@@ -90,7 +90,7 @@ describe("verbose output format", () => {
 		expect(out).toContain("안녕하세요")
 	})
 
-	test("truncates prompt longer than 100 chars with ellipsis", () => {
+	test("shows full prompt without truncation", () => {
 		const long = "가".repeat(120)
 		const out = getLogOutput({
 			type: "chat_request",
@@ -105,8 +105,8 @@ describe("verbose output format", () => {
 			prompt: long,
 		})
 
-		expect(out).toContain("…")
-		expect(out).not.toContain(long)
+		expect(out).toContain(long)
+		expect(out).not.toContain("…")
 	})
 
 	test("formats chat_request with unknown model as ?", () => {
@@ -145,7 +145,7 @@ describe("verbose output format", () => {
 		expect(out).toContain("안녕하세요! 저는 AI입니다.")
 	})
 
-	test("truncates response text longer than 100 chars with ellipsis", () => {
+	test("shows full response text without truncation", () => {
 		const long = "나".repeat(120)
 		const out = getLogOutput({
 			type: "chat_response",
@@ -160,8 +160,8 @@ describe("verbose output format", () => {
 			usage: {},
 		})
 
-		expect(out).toContain("…")
-		expect(out).not.toContain(long)
+		expect(out).toContain(long)
+		expect(out).not.toContain("…")
 	})
 
 	test("formats chat_error", () => {
