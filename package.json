@@ -9,6 +9,8 @@
 	"scripts": {
 		"build": "turbo run build",
 		"dev": "turbo run dev --parallel",
+		"build:proxy": "cd packages/oo-proxy && bunx tsup src/index.ts src/cli.ts --format esm --outDir dist --clean",
+		"start": "bun run build:proxy && node packages/oo-proxy/dist/cli.js",
 		"typecheck": "turbo run typecheck",
 		"test": "turbo run test",
 		"format-and-lint": "biome check .",
